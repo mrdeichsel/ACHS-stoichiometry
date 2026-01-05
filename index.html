@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACHS Chemistry Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-chem {
+            font-family: 'Noto Serif', serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains+Mono', monospace;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.2s ease-in-out 0s 2;
+        }
+        
+        /* Toggle Switch Styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #475569;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #6366f1;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <div id="app" class="max-w-5xl mx-auto">
+        <!-- Content will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        const EQUATIONS = [
+            { equation: "2 H₂ + O₂ → 2 H₂O", substances: [{ name: "H₂", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 1, side: "reactant" }, { name: "H₂O", coefficient: 2, side: "product" }] },
+            { equation: "N₂ + 3 H₂ → 2 NH₃", substances: [{ name: "N₂", coefficient: 1, side: "reactant" }, { name: "H₂", coefficient: 3, side: "reactant" }, { name: "NH₃", coefficient: 2, side: "product" }] },
+            { equation: "CH₄ + 2 O₂ → CO₂ + 2 H₂O", substances: [{ name: "CH₄", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 2, side: "reactant" }, { name: "CO₂", coefficient: 1, side: "product" }, { name: "H₂O", coefficient: 2, side: "product" }] },
+            { equation: "2 Al + 3 Cl₂ → 2 AlCl₃", substances: [{ name: "Al", coefficient: 2, side: "reactant" }, { name: "Cl₂", coefficient: 3, side: "reactant" }, { name: "AlCl₃", coefficient: 2, side: "product" }] },
+            { equation: "C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O", substances: [{ name: "C₃H₈", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 5, side: "reactant" }, { name: "CO₂", coefficient: 3, side: "product" }, { name: "H₂O", coefficient: 4, side: "product" }] },
+            { equation: "Zn + 2 HCl → ZnCl₂ + H₂", substances: [{ name: "Zn", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "reactant" }, { name: "ZnCl₂", coefficient: 1, side: "product" }, { name: "H₂", coefficient: 1, side: "product" }] },
+            { equation: "AgNO₃ + NaCl → AgCl + NaNO₃", substances: [{ name: "AgNO₃", coefficient: 1, side: "reactant" }, { name: "NaCl", coefficient: 1, side: "reactant" }, { name: "AgCl", coefficient: 1, side: "product" }, { name: "NaNO₃", coefficient: 1, side: "product" }] },
+            { equation: "2 KClO₃ → 2 KCl + 3 O₂", substances: [{ name: "KClO₃", coefficient: 2, side: "reactant" }, { name: "KCl", coefficient: 2, side: "product" }, { name: "O₂", coefficient: 3, side: "product" }] },
+            { equation: "Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂", substances: [{ name: "Fe₂O₃", coefficient: 1, side: "reactant" }, { name: "CO", coefficient: 3, side: "reactant" }, { name: "Fe", coefficient: 2, side: "product" }, { name: "CO₂", coefficient: 3, side: "product" }] },
+            { equation: "Mg + 2 HCl → MgCl₂ + H₂", substances: [{ name: "Mg", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "reactant" }, { name: "MgCl₂", coefficient: 1, side: "product" }, { name: "H₂", coefficient: 1, side: "product" }] },
+            { equation: "2 Mg + O₂ → 2 MgO", substances: [{ name: "Mg", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 1, side: "reactant" }, { name: "MgO", coefficient: 2, side: "product" }] },
+            { equation: "H₂ + Cl₂ → 2 HCl", substances: [{ name: "H₂", coefficient: 1, side: "reactant" }, { name: "Cl₂", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "product" }] },
+            { equation: "CaCO₃ → CaO + CO₂", substances: [{ name: "CaCO₃", coefficient: 1, side: "reactant" }, { name: "CaO", coefficient: 1, side: "product" }, { name: "CO₂", coefficient: 1, side: "product" }] },
+            { equation: "2 H₂O₂ → 2 H₂O + O₂", substances: [{ name: "H₂O₂", coefficient: 2, side: "reactant" }, { name: "H₂O", coefficient: 2, side: "product" }, { name: "O₂", coefficient: 1, side: "product" }] },
+            { equation: "P₄ + 5 O₂ → 2 P₂O₅", substances: [{ name: "P₄", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 5, side: "reactant" }, { name: "P₂O₅", coefficient: 2, side: "product" }] },
+            { equation: "2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O", substances: [{ name: "C₂H₆", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 7, side: "reactant" }, { name: "CO₂", coefficient: 4, side: "product" }, { name: "H₂O", coefficient: 6, side: "product" }] },
+            { equation: "S₈ + 8 O₂ → 8 SO₂", substances: [{ name: "S₈", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 8, side: "reactant" }, { name: "SO₂", coefficient: 8, side: "product" }] },
+            { equation: "N₂ + O₂ → 2 NO", substances: [{ name: "N₂", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 1, side: "reactant" }, { name: "NO", coefficient: 2, side: "product" }] },
+            { equation: "2 Fe + 3 Cl₂ → 2 FeCl₃", substances: [{ name: "Fe", coefficient: 2, side: "reactant" }, { name: "Cl₂", coefficient: 3, side: "reactant" }, { name: "FeCl₃", coefficient: 2, side: "product" }] },
+            { equation: "2 KI + Cl₂ → 2 KCl + I₂", substances: [{ name: "KI", coefficient: 2, side: "reactant" }, { name: "Cl₂", coefficient: 1, side: "reactant" }, { name: "KCl", coefficient: 2, side: "product" }, { name: "I₂", coefficient: 1, side: "product" }] },
+            { equation: "Pb(NO₃)₂ + 2 KI → PbI₂ + 2 KNO₃", substances: [{ name: "Pb(NO₃)₂", coefficient: 1, side: "reactant" }, { name: "KI", coefficient: 2, side: "reactant" }, { name: "PbI₂", coefficient: 1, side: "product" }, { name: "KNO₃", coefficient: 2, side: "product" }] },
+            { equation: "BaCl₂ + Na₂SO₄ → BaSO₄ + 2 NaCl", substances: [{ name: "BaCl₂", coefficient: 1, side: "reactant" }, { name: "Na₂SO₄", coefficient: 1, side: "reactant" }, { name: "BaSO₄", coefficient: 1, side: "product" }, { name: "NaCl", coefficient: 2, side: "product" }] },
+            { equation: "Cu + 2 AgNO₃ → Cu(NO₃)₂ + 2 Ag", substances: [{ name: "Cu", coefficient: 1, side: "reactant" }, { name: "AgNO₃", coefficient: 2, side: "reactant" }, { name: "Cu(NO₃)₂", coefficient: 1, side: "product" }, { name: "Ag", coefficient: 2, side: "product" }] },
+            { equation: "NaOH + HCl → NaCl + H₂O", substances: [{ name: "NaOH", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 1, side: "reactant" }, { name: "NaCl", coefficient: 1, side: "product" }, { name: "H₂O", coefficient: 1, side: "product" }] },
+            { equation: "2 H₂O → 2 H₂ + O₂", substances: [{ name: "H₂O", coefficient: 2, side: "reactant" }, { name: "H₂", coefficient: 2, side: "product" }, { name: "O₂", coefficient: 1, side: "product" }] },
+            { equation: "4 Fe + 3 O₂ → 2 Fe₂O₃", substances: [{ name: "Fe", coefficient: 4, side: "reactant" }, { name: "O₂", coefficient: 3, side: "reactant" }, { name: "Fe₂O₃", coefficient: 2, side: "product" }] },
+            { equation: "Cl₂ + 2 NaBr → 2 NaCl + Br₂", substances: [{ name: "Cl₂", coefficient: 1, side: "reactant" }, { name: "NaBr", coefficient: 2, side: "reactant" }, { name: "NaCl", coefficient: 2, side: "product" }, { name: "Br₂", coefficient: 1, side: "product" }] },
+            { equation: "Na₂CO₃ + 2 HCl → 2 NaCl + H₂O + CO₂", substances: [{ name: "Na₂CO₃", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "reactant" }, { name: "NaCl", coefficient: 2, side: "product" }, { name: "H₂O", coefficient: 1, side: "product" }, { name: "CO₂", coefficient: 1, side: "product" }] },
+            { equation: "NH₃ + HCl → NH₄Cl", substances: [{ name: "NH₃", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 1, side: "reactant" }, { name: "NH₄Cl", coefficient: 1, side: "product" }] },
+            { equation: "2 C₄H₁₀ + 13 O₂ → 8 CO₂ + 10 H₂O", substances: [{ name: "C₄H₁₀", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 13, side: "reactant" }, { name: "CO₂", coefficient: 8, side: "product" }, { name: "H₂O", coefficient: 10, side: "product" }] }
+        ];
+
+        let state = {
+            currentEq: null,
+            substanceA: null,
+            substanceB: null,
+            userInputA: '',
+            userInputB: '',
+            ratioFeedback: null,
+            cf1Top: '',
+            cf1Bottom: '',
+            cf2Top: '',
+            cf2Bottom: '',
+            convFeedback: null,
+            givenAmount: 0,
+            givenSubstance: null,
+            targetSubstance: null,
+            selectedFactorIdx: null,
+            selectionFeedback: null,
+            
+            isBalancedMode: true,
+            balancingFeedback: null,
+            userBalancingCoeffs: {},
+
+            ratioCorrect: 0,
+            ratioTotal: 0,
+            factorsCorrect: 0,
+            factorsTotal: 0,
+            analysisCorrect: 0,
+            analysisTotal: 0,
+
+            showHelp: false,
+            openDropdown: null
+        };
+
+        function generateNewQuestion() {
+            const randomEq = EQUATIONS[Math.floor(Math.random() * EQUATIONS.length)];
+            let indices = [];
+            while (indices.length < 2) {
+                let r = Math.floor(Math.random() * randomEq.substances.length);
+                if (!indices.includes(r)) indices.push(r);
+            }
+
+            const subA = randomEq.substances[indices[0]];
+            const subB = randomEq.substances[indices[1]];
+            const isGivenA = Math.random() > 0.5;
+            const amount = (Math.floor(Math.random() * 20) + 1).toFixed(1);
+
+            Object.assign(state, {
+                currentEq: randomEq,
+                substanceA: subA,
+                substanceB: subB,
+                userInputA: '',
+                userInputB: '',
+                ratioFeedback: null,
+                cf1Top: '',
+                cf1Bottom: '',
+                cf2Top: '',
+                cf2Bottom: '',
+                convFeedback: null,
+                givenAmount: amount,
+                givenSubstance: isGivenA ? subA : subB,
+                targetSubstance: isGivenA ? subB : subA,
+                selectedFactorIdx: null,
+                selectionFeedback: null,
+                openDropdown: null,
+                balancingFeedback: null,
+                userBalancingCoeffs: {}
+            });
+            render();
+        }
+
+        function toggleMode() {
+            state.isBalancedMode = !state.isBalancedMode;
+            generateNewQuestion();
+        }
+
+        function toggleHelp() {
+            state.showHelp = !state.showHelp;
+            render();
+        }
+
+        function handleValueSelection(key, value) {
+            state[key] = value;
+            if (key === 'userInputA' || key === 'userInputB') state.ratioFeedback = null;
+            if (key.startsWith('cf')) state.convFeedback = null;
+            if (key.startsWith('balancing_')) state.balancingFeedback = null;
+            state.openDropdown = null;
+            render();
+        }
+
+        function checkBalancing() {
+            let allCorrect = true;
+            state.currentEq.substances.forEach((sub, idx) => {
+                const userVal = parseInt(state[`balancing_${idx}`]) || 1;
+                if (userVal !== sub.coefficient) allCorrect = false;
+            });
+            state.balancingFeedback = allCorrect ? 'correct' : 'incorrect';
+            render();
+        }
+
+        function checkRatio() {
+            const isCorrect = parseInt(state.userInputA) === state.substanceA.coefficient && 
+                             parseInt(state.userInputB) === state.substanceB.coefficient;
+            state.ratioTotal++;
+            if (isCorrect) state.ratioCorrect++;
+            state.ratioFeedback = isCorrect ? 'correct' : 'incorrect';
+            render();
+        }
+
+        function checkFactors() {
+            const isCf1Correct = parseInt(state.cf1Top) === state.substanceA.coefficient && 
+                                parseInt(state.cf1Bottom) === state.substanceB.coefficient;
+            const isCf2Correct = parseInt(state.cf2Top) === state.substanceB.coefficient && 
+                                parseInt(state.cf2Bottom) === state.substanceA.coefficient;
+            const isAllCorrect = isCf1Correct && isCf2Correct;
+            state.factorsTotal++;
+            if (isAllCorrect) state.factorsCorrect++;
+            state.convFeedback = isAllCorrect ? 'correct' : 'incorrect';
+            render();
+        }
+
+        function selectBridge(idx) {
+            if (state.selectionFeedback === 'correct') return;
+            state.selectedFactorIdx = idx;
+            let isCorrect = (idx === 0) ? (state.givenSubstance.name === state.substanceB.name) : (state.givenSubstance.name === state.substanceA.name);
+            state.analysisTotal++;
+            if (isCorrect) state.analysisCorrect++;
+            state.selectionFeedback = isCorrect ? 'correct' : 'incorrect';
+            render();
+        }
+
+        function resetGame() {
+            state.ratioCorrect = state.ratioTotal = state.factorsCorrect = state.factorsTotal = state.analysisCorrect = state.analysisTotal = 0;
+            generateNewQuestion();
+        }
+
+        function renderDropdown(value, key, label, id, isLocked, isBalancing = false) {
+            const isOpen = state.openDropdown === id;
+            const displayValue = value || '?';
+            
+            let buttonClass = isBalancing 
+                ? "w-14 h-12 text-xl flex items-center justify-center gap-1 rounded-lg border-2 transition-all outline-none "
+                : "w-20 h-16 text-2xl flex items-center justify-center gap-1 rounded-xl border-2 transition-all outline-none ";
+            
+            if (isLocked) {
+                buttonClass += isBalancing 
+                    ? "bg-emerald-900 border-emerald-500 text-emerald-100 cursor-default shadow-sm"
+                    : "bg-emerald-50 border-emerald-500 text-emerald-700 cursor-default shadow-sm";
+            } else {
+                buttonClass += isBalancing
+                    ? "bg-slate-800 border-slate-600 focus:border-indigo-500 hover:border-slate-400 text-white cursor-pointer shadow-sm"
+                    : "bg-white border-slate-200 focus:border-indigo-500 hover:border-slate-300 text-slate-700 cursor-pointer shadow-sm";
+            }
+
+            const labelColorClass = isBalancing ? "text-white" : "text-slate-700";
+
+            return `
+                <div class="flex items-center gap-1.5 relative">
+                    <div class="relative">
+                        <button onclick="if(!${isLocked}) { state.openDropdown = state.openDropdown === '${id}' ? null : '${id}'; render(); }" class="${buttonClass}">
+                            ${displayValue}
+                            ${!isLocked ? `<i data-lucide="chevron-down" class="${isBalancing ? 'w-3 h-3' : 'w-4 h-4'} text-slate-400 transform ${isOpen ? 'rotate-180' : ''}"></i>` : ''}
+                        </button>
+                        ${isOpen && !isLocked ? `
+                            <div class="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] overflow-hidden mt-1">
+                                <div class="max-h-40 overflow-y-auto custom-scrollbar">
+                                    ${Array.from({length: 15}, (_, i) => i + 1).map(num => `
+                                        <button onclick="handleValueSelection('${key}', '${num}')" class="w-full py-2 text-lg font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b last:border-0 border-slate-50">
+                                            ${num}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${label ? `<div class="flex items-baseline gap-1 ml-1 whitespace-nowrap">
+                        <span class="${isBalancing ? 'text-sm' : 'text-lg'} font-bold ${isBalancing ? 'hidden' : labelColorClass}">${isBalancing ? '' : 'mol'}</span>
+                        <span class="text-xl md:text-2xl font-bold ${labelColorClass} font-chem">${label}</span>
+                    </div>` : ''}
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            if (!state.currentEq) return;
+
+            const reactants = state.currentEq.substances.filter(s => s.side === 'reactant');
+            const products = state.currentEq.substances.filter(s => s.side === 'product');
+
+            const isBalancingStepVisible = !state.isBalancedMode && state.balancingFeedback !== 'correct';
+            const isPracticeStepVisible = state.isBalancedMode || state.balancingFeedback === 'correct';
+
+            app.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <div class="flex flex-col lg:flex-row justify-between items-start mb-8 gap-6">
+                        <div class="flex items-center gap-3 text-indigo-600">
+                            <i data-lucide="beaker" class="w-10 h-10 mt-1"></i>
+                            <div class="flex flex-col">
+                                <h1 class="text-2xl font-bold leading-tight">ACHS Chemistry Practice</h1>
+                                <p class="text-sm font-semibold text-slate-500 uppercase tracking-widest leading-none">mole ratios</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row items-end md:items-center gap-4 md:gap-8 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <div class="flex gap-6 md:gap-8">
+                                <div class="text-center"><p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Ratio</p><p class="text-lg font-bold text-slate-700 leading-none">${state.ratioCorrect}<span class="text-slate-300 font-normal px-1">/</span>${state.ratioTotal}</p></div>
+                                <div class="text-center"><p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Factors</p><p class="text-lg font-bold text-slate-700 leading-none">${state.factorsCorrect}<span class="text-slate-300 font-normal px-1">/</span>${state.factorsTotal}</p></div>
+                                <div class="text-center"><p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Analysis</p><p class="text-lg font-bold text-slate-700 leading-none">${state.analysisCorrect}<span class="text-slate-300 font-normal px-1">/</span>${state.analysisTotal}</p></div>
+                            </div>
+                            <button onclick="toggleHelp()" class="p-2 hover:bg-slate-100 rounded-full transition-colors hidden md:block"><i data-lucide="help-circle" class="w-6 h-6 text-slate-400"></i></button>
+                        </div>
+                    </div>
+
+                    ${state.showHelp ? `<div class="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800 animate-in fade-in slide-in-from-top-2"><p class="font-bold mb-1 underline">Dimensional Analysis</p><p>We start with a "Given" value. We multiply by a conversion factor where the units we don't want anymore go on the bottom so they cancel out.</p></div>` : ''}
+
+                    <!-- MAIN EQUATION DISPLAY -->
+                    <div class="bg-slate-900 rounded-xl p-6 md:p-8 mb-8 shadow-inner overflow-x-auto min-h-[160px] relative flex flex-col items-center justify-center">
+                        
+                        <!-- Toggle inside the field -->
+                        <div class="absolute left-4 top-4 flex flex-col gap-1 items-start bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                             <div class="flex items-center gap-2">
+                                <label class="switch">
+                                    <input type="checkbox" ${!state.isBalancedMode ? 'checked' : ''} onclick="toggleMode()">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-[9px] font-bold uppercase ${!state.isBalancedMode ? 'text-indigo-400' : 'text-slate-400'}">Equation</span>
+                             </div>
+                             <p class="text-[8px] text-slate-500 uppercase tracking-widest font-bold px-1">${state.isBalancedMode ? 'Mode: Balanced' : 'Mode: Unbalanced'}</p>
+                        </div>
+
+                        <p class="text-indigo-300 text-[10px] uppercase tracking-widest mb-4 font-bold">
+                            ${state.isBalancedMode ? 'Balanced Chemical Equation' : (state.balancingFeedback === 'correct' ? 'Equation Successfully Balanced' : 'Step 0: Balance the Equation')}
+                        </p>
+                        
+                        ${state.isBalancedMode || state.balancingFeedback === 'correct' ? `
+                            <h2 class="text-2xl md:text-4xl font-chem text-white whitespace-nowrap">${state.currentEq.equation}</h2>
+                        ` : `
+                            <div class="flex flex-nowrap items-center justify-center gap-4 text-white font-chem text-xl md:text-3xl pt-2">
+                                <!-- Reactants -->
+                                ${reactants.map((sub, idx) => `
+                                    <div class="flex items-center gap-2">
+                                        ${renderDropdown(state[`balancing_${state.currentEq.substances.indexOf(sub)}`], `balancing_${state.currentEq.substances.indexOf(sub)}`, sub.name, `bal_${idx}`, false, true)}
+                                    </div>
+                                    ${idx < reactants.length - 1 ? '<span class="text-indigo-400 mx-1 text-2xl">+</span>' : ''}
+                                `).join('')}
+                                
+                                <span class="text-indigo-400 mx-2 text-2xl">→</span>
+                                
+                                <!-- Products -->
+                                ${products.map((sub, idx) => `
+                                    <div class="flex items-center gap-2">
+                                        ${renderDropdown(state[`balancing_${state.currentEq.substances.indexOf(sub)}`], `balancing_${state.currentEq.substances.indexOf(sub)}`, sub.name, `bal_p_${idx}`, false, true)}
+                                    </div>
+                                    ${idx < products.length - 1 ? '<span class="text-indigo-400 mx-1 text-2xl">+</span>' : ''}
+                                `).join('')}
+                            </div>
+                            <button onclick="checkBalancing()" class="mt-6 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs transition-all shadow-md active:scale-95">Check Equation</button>
+                        `}
+                    </div>
+
+                    ${state.balancingFeedback === 'incorrect' && !state.isBalancedMode ? `
+                        <div class="mb-8 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100 max-w-2xl mx-auto">
+                            <i data-lucide="x-circle" class="mt-1 flex-shrink-0 text-red-600"></i>
+                            <div>
+                                <p class="font-bold text-lg mb-0.5 underline decoration-red-300">Not Balanced!</p>
+                                <p>Count the atoms on both sides. Make sure the number of atoms for each element is equal on the reactant and product sides.</p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- PRACTICE FLOW -->
+                    <div class="${isPracticeStepVisible ? 'opacity-100' : 'opacity-20 pointer-events-none'}" id="practice-steps">
+                        <!-- STEP 1 -->
+                        <div class="transition-all duration-500 ${state.ratioFeedback === 'correct' ? 'opacity-40 pointer-events-none' : 'opacity-100'}">
+                            <div class="text-center mb-4">
+                                <h3 class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">Step 1</h3>
+                                <p class="text-lg text-slate-600 font-medium">Identify the mole ratio of <span class="font-chem font-bold text-indigo-700">${state.substanceA.name}</span> to <span class="font-chem font-bold text-indigo-700">${state.substanceB.name}</span>:</p>
+                            </div>
+                            <div class="flex items-center justify-center gap-6 mb-4">
+                                ${renderDropdown(state.userInputA, 'userInputA', state.substanceA.name, 'A', state.ratioFeedback === 'correct')}
+                                <div class="text-4xl text-slate-900 font-bold">:</div>
+                                ${renderDropdown(state.userInputB, 'userInputB', state.substanceB.name, 'B', state.ratioFeedback === 'correct')}
+                            </div>
+                            ${state.ratioFeedback !== 'correct' ? `<button onclick="checkRatio()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all ${(!state.userInputA || !state.userInputB) ? 'opacity-50 cursor-not-allowed' : ''}" ${(!state.userInputA || !state.userInputB) ? 'disabled' : ''}>Check Ratio</button>` : ''}
+                            ${state.ratioFeedback === 'incorrect' ? `<div class="mt-4 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100"><i data-lucide="x-circle" class="mt-1 flex-shrink-0 text-red-600"></i><div><p class="font-bold text-lg mb-0.5 underline decoration-red-300">Needs Revision!</p><p>Check the coefficients in the equation above one more time. Look for the large numbers in front of the molecules.</p></div></div>` : ''}
+                        </div>
+
+                        <!-- STEP 2 -->
+                        ${state.ratioFeedback === 'correct' ? `
+                            <div class="mt-8 pt-8 border-t border-slate-100 transition-all duration-500 ${state.convFeedback === 'correct' ? 'opacity-40 pointer-events-none' : 'opacity-100'}">
+                                <div class="text-center mb-4"><h3 class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">Step 2</h3><p class="text-lg text-slate-600 font-medium">Construct the potential conversion factors:</p></div>
+                                <div class="flex flex-col md:flex-row items-center justify-center gap-12 mb-6">
+                                    <div class="flex flex-col items-center">${renderDropdown(state.cf1Top, 'cf1Top', state.substanceA.name, 'CF1T', state.convFeedback === 'correct')}<div class="w-full h-1 bg-slate-800 rounded-full my-2"></div>${renderDropdown(state.cf1Bottom, 'cf1Bottom', state.substanceB.name, 'CF1B', state.convFeedback === 'correct')}</div>
+                                    <div class="text-xl font-bold text-slate-300 hidden md:block">AND</div>
+                                    <div class="flex flex-col items-center">${renderDropdown(state.cf2Top, 'cf2Top', state.substanceB.name, 'CF2T', state.convFeedback === 'correct')}<div class="w-full h-1 bg-slate-800 rounded-full my-2"></div>${renderDropdown(state.cf2Bottom, 'cf2Bottom', state.substanceA.name, 'CF2B', state.convFeedback === 'correct')}</div>
+                                </div>
+                                ${state.convFeedback !== 'correct' ? `<button onclick="checkFactors()" class="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all ${(!state.cf1Top || !state.cf1Bottom || !state.cf2Top || !state.cf2Bottom) ? 'opacity-50 cursor-not-allowed' : ''}" ${(!state.cf1Top || !state.cf1Bottom || !state.cf2Top || !state.cf2Bottom) ? 'disabled' : ''}>Check Factors</button>` : ''}
+                                ${state.convFeedback === 'incorrect' ? `<div class="mt-4 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100"><i data-lucide="alert-circle" class="mt-1 flex-shrink-0 text-red-600"></i><div><p class="font-bold text-lg mb-0.5 underline decoration-red-300">Factor Error!</p><p>Remember: These are fractions built from the ratio you just found. The numbers must match your ratio in Step 1!</p></div></div>` : ''}
+                            </div>
+                        ` : ''}
+
+                        <!-- STEP 3 -->
+                        ${state.convFeedback === 'correct' ? `
+                            <div class="mt-8 pt-8 border-t border-slate-100 transition-all duration-500">
+                                <div class="text-center mb-6"><h3 class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-1">Step 3: Dimensional Analysis</h3><p class="text-lg text-slate-600">Solve the problem by choosing the correct conversion factor.</p></div>
+                                <div class="w-full overflow-x-auto pb-4 custom-scrollbar">
+                                    <div class="flex flex-nowrap items-center justify-center gap-3 md:gap-5 min-w-max px-4">
+                                        <div class="bg-orange-50 border-2 border-orange-200 px-5 py-4 rounded-xl shadow-sm whitespace-nowrap min-w-[180px]"><p class="text-[10px] font-bold text-orange-600 uppercase mb-1">Given Value</p><div class="flex items-center gap-2"><span class="text-xl font-bold text-slate-800">${state.givenAmount}</span><span class="text-lg font-bold text-slate-700">mol <span class="font-chem">${state.givenSubstance.name}</span></span></div></div>
+                                        <div class="text-2xl font-bold text-slate-400">×</div>
+                                        <div class="border-2 border-dashed px-5 py-2 rounded-xl min-w-[240px] h-[100px] flex items-center justify-center transition-all ${state.selectionFeedback === 'correct' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-slate-50'}">${state.selectedFactorIdx === null ? `<div class="text-center whitespace-nowrap"><p class="text-xs font-bold text-slate-400 uppercase mb-1">Conversion Factor</p><p class="text-slate-400 text-sm italic">Choose below...</p></div>` : `<div class="flex flex-col items-center whitespace-nowrap"><p class="text-lg font-bold text-slate-800">${state.selectedFactorIdx === 0 ? state.cf1Top : state.cf2Top} mol <span class="font-chem">${state.selectedFactorIdx === 0 ? state.substanceA.name : state.substanceB.name}</span></p><div class="w-full h-0.5 bg-slate-800 my-1"></div><p class="text-lg font-bold text-slate-800">${state.selectedFactorIdx === 0 ? state.cf1Bottom : state.cf2Bottom} mol <span class="font-chem">${state.selectedFactorIdx === 0 ? state.substanceB.name : state.substanceA.name}</span></p></div>`}</div>
+                                        <div class="text-2xl font-bold text-slate-400">=</div>
+                                        <div class="bg-slate-100 border-2 border-slate-200 px-5 py-4 rounded-xl whitespace-nowrap min-w-[180px]"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Target Value</p><div class="flex items-center gap-2"><span class="text-xl font-bold text-slate-400">?</span><span class="text-lg font-bold text-slate-500">mol <span class="font-chem">${state.targetSubstance.name}</span></span></div></div>
+                                    </div>
+                                </div>
+                                ${state.selectionFeedback !== 'correct' ? `<div class="grid md:grid-cols-2 gap-4 mt-8">${[0, 1].map(idx => `<button onclick="selectBridge(${idx})" class="p-4 bg-white border-2 rounded-xl transition-all active:scale-95 group border-slate-200 hover:border-indigo-500 hover:shadow-md"><p class="text-xs text-slate-400 font-bold uppercase mb-2 group-hover:text-indigo-400">Factor Choice ${idx + 1}</p><div class="flex flex-col items-center"><p class="font-bold text-slate-800">${idx === 0 ? state.cf1Top : state.cf2Top} mol <span class="font-chem">${idx === 0 ? state.substanceA.name : state.substanceB.name}</span></p><div class="w-20 h-px bg-slate-300 my-1.5"></div><p class="font-bold text-slate-800">${idx === 0 ? state.cf1Bottom : state.cf2Bottom} mol <span class="font-chem">${idx === 0 ? state.substanceB.name : state.substanceA.name}</span></p></div></button>`).join('')}</div>` : ''}
+                                ${state.selectionFeedback === 'incorrect' ? `<div class="mt-6 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100"><i data-lucide="help-circle" class="mt-1 flex-shrink-0 text-red-600"></i><div><p class="font-bold text-lg mb-0.5 underline decoration-red-300">Unit Mismatch!</p><p>Look closely at your <strong>Given</strong> unit: <span class="font-bold">mol <span class="font-chem">${state.givenSubstance.name}</span></span>. To cancel it out, you must pick the conversion factor that has that same unit in the <strong>denominator</strong> (bottom).</p></div></div>` : ''}
+                                ${state.selectionFeedback === 'correct' ? `<div class="space-y-4 mt-8"><div class="bg-emerald-900 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between"><div><p class="font-bold text-lg mb-1">Calculation Complete!</p><p class="text-emerald-100 text-sm">The units for <span class="font-bold underline">mol <span class="font-chem">${state.givenSubstance.name}</span></span> cancelled out perfectly because one was on top and the other was on the bottom of the calculation.</p></div><div class="bg-emerald-800 p-3 rounded-full"><i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-400"></i></div></div><button onclick="generateNewQuestion()" class="w-full py-4 bg-slate-800 text-white rounded-xl font-bold text-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-2 shadow-md"><i data-lucide="refresh-cw" class="w-5 h-5"></i> Next Problem Set</button></div>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <button onclick="resetGame()" class="text-slate-400 hover:text-slate-600 text-sm flex items-center gap-1 mb-12 mx-auto"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Clear Progressive Data</button>
+            `;
+            lucide.createIcons();
+        }
+
+        document.addEventListener('mousedown', (e) => {
+            const dropdownContainers = document.querySelectorAll('.relative');
+            let clickedInside = false;
+            dropdownContainers.forEach(container => { if (container.contains(e.target)) clickedInside = true; });
+            if (!clickedInside && state.openDropdown !== null) { state.openDropdown = null; render(); }
+        });
+
+        generateNewQuestion();
+    </script>
+</body>
+</html>
