@@ -5,63 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACHS Chemistry Practice</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
         }
-        .font-chem {
-            font-family: 'Noto Serif', serif;
+
+        .formula-font {
+            font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            text-transform: none !important;
         }
-        .font-mono {
-            font-family: 'JetBrains+Mono', monospace;
+
+        .subscript {
+            font-size: 0.75em;
+            line-height: 0;
+            position: relative;
+            bottom: -0.25em;
+            margin-left: 0.05em;
+            font-weight: 500;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
+
+        .reaction-box {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
+
+        .coefficient {
+            font-weight: 700;
+            color: #60a5fa;
+            margin-right: 0.1em;
+            font-family: 'Inter', sans-serif;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
+
+        .fraction-line {
+            width: 100%;
+            height: 2px;
+            background-color: #cbd5e1;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+
+        .factor-editable {
+            width: 180px;
+            min-height: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            white-space: nowrap;
         }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+        .factor-tile {
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
         }
-        .animate-shake {
-            animation: shake 0.2s ease-in-out 0s 2;
+
+        .factor-tile:hover {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+            background-color: #eff6ff;
         }
-        
-        /* Toggle Switch Styling */
+
         .switch {
             position: relative;
             display: inline-block;
             width: 40px;
             height: 20px;
         }
-        .switch input { 
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+        
         .slider {
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #475569;
+            background-color: #cbd5e1;
             transition: .4s;
             border-radius: 20px;
         }
+
         .slider:before {
             position: absolute;
             content: "";
@@ -71,387 +101,636 @@
             transition: .4s;
             border-radius: 50%;
         }
-        input:checked + .slider {
-            background-color: #6366f1;
+
+        input:checked + .slider { background-color: #3b82f6; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .calc-btn {
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            transition: all 0.1s;
         }
-        input:checked + .slider:before {
-            transform: translateX(20px);
+
+        .calc-btn:hover { background-color: #e2e8f0; }
+        .calc-btn:active { transform: scale(0.95); }
+
+        .mode-toggle, .course-toggle {
+            display: flex;
+            background-color: #f1f5f9;
+            padding: 4px;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .mode-btn, .course-btn {
+            text-align: center;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+
+        .mode-btn.active, .course-btn.active {
+            background-color: white;
+            color: #3b82f6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        @media (min-width: 1024px) {
+            .side-panel-wrapper {
+                position: sticky;
+                top: 2rem;
+                align-self: flex-start;
+                max-height: calc(100vh - 4rem);
+                overflow-y: auto;
+                padding-bottom: 2rem;
+            }
+            .side-panel-wrapper::-webkit-scrollbar { width: 4px; }
+            .side-panel-wrapper::-webkit-scrollbar-track { background: transparent; }
+            .side-panel-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 md:p-8">
-    <div id="app" class="max-w-5xl mx-auto">
-        <!-- Content will be injected here by JavaScript -->
+<body class="min-h-screen">
+    <div class="max-w-[1600px] mx-auto p-4 md:p-8">
+        <div class="flex flex-col lg:flex-row items-start gap-8">
+            
+            <aside class="w-full lg:w-80 shrink-0">
+                <div class="side-panel-wrapper space-y-6">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                        <h1 class="text-xl font-extrabold text-slate-800 leading-tight">ACHS Chemistry</h1>
+                        <p class="text-blue-600 font-bold text-sm uppercase tracking-wider">Stoichiometry Lab</p>
+                        
+                        <div class="grid grid-cols-2 gap-3 mt-6">
+                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-center">
+                                <div class="text-[10px] font-bold text-blue-500 uppercase">Solved</div>
+                                <div id="stat-solved" class="text-xl font-black text-blue-700">0</div>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase">Acc</div>
+                                <div id="stat-accuracy" class="text-xl font-black text-slate-700">0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Atomic Masses (g/mol)</h3>
+                        <div class="grid grid-cols-1 gap-1 text-sm formula-font" id="atomic-weights-list"></div>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-2xl shadow-lg p-5 text-white">
+                        <div id="calc-display" class="bg-slate-900 rounded-lg p-3 text-right text-lg font-mono mb-4 border border-slate-700 h-10 flex items-center justify-end">0</div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="calcInput('7')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">7</button>
+                            <button onclick="calcInput('8')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">8</button>
+                            <button onclick="calcInput('9')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">9</button>
+                            <button onclick="calcInput('/')" class="bg-orange-500 text-white p-1.5 rounded-lg font-bold">/</button>
+                            <button onclick="calcInput('4')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">4</button>
+                            <button onclick="calcInput('5')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">5</button>
+                            <button onclick="calcInput('6')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">6</button>
+                            <button onclick="calcInput('*')" class="bg-orange-500 text-white p-1.5 rounded-lg font-bold">×</button>
+                            <button onclick="calcInput('1')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">1</button>
+                            <button onclick="calcInput('2')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">2</button>
+                            <button onclick="calcInput('3')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">3</button>
+                            <button onclick="calcInput('-')" class="bg-orange-500 text-white p-1.5 rounded-lg font-bold">-</button>
+                            <button onclick="calcInput('0')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">0</button>
+                            <button onclick="calcInput('.')" class="calc-btn text-slate-800 p-1.5 rounded-lg font-bold">.</button>
+                            <button onclick="calcClear()" class="bg-slate-600 text-white p-1.5 rounded-lg font-bold">C</button>
+                            <button onclick="calcInput('+')" class="bg-orange-500 text-white p-1.5 rounded-lg font-bold">+</button>
+                            <button onclick="calcSolve()" class="col-span-4 bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg font-bold mt-1">=</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-grow w-full space-y-6">
+                <div class="reaction-box rounded-3xl p-8 text-white shadow-xl text-center">
+                    <div id="equation-display" class="text-2xl md:text-4xl font-light tracking-wide flex flex-wrap justify-center items-center gap-x-4 gap-y-4 formula-font">
+                        Loading Equation...
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Grading Standard</span>
+                            <div class="course-toggle">
+                                <button onclick="setCourse('reg')" id="course-reg" class="course-btn active">Chemistry</button>
+                                <button onclick="setCourse('honors')" id="course-honors" class="course-btn">Honors (Sig Figs)</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Problem Type</span>
+                            <div class="mode-toggle">
+                                <button onclick="setMode('mole-mole')" id="mode-mole-mole" class="mode-btn">Mole-Mole</button>
+                                <button onclick="setMode('mass-mole')" id="mode-mass-mole" class="mode-btn">Mass-Mole</button>
+                                <button onclick="setMode('mole-mass')" id="mode-mole-mass" class="mode-btn">Mole-Mass</button>
+                                <button onclick="setMode('mass-mass')" id="mode-mass-mass" class="mode-btn">Mass-Mass</button>
+                                <button onclick="setMode('random')" id="mode-random" class="mode-btn active">Random</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-8">
+                        <div id="question-text" class="text-2xl text-slate-800 leading-relaxed mb-8 font-medium italic border-l-4 border-blue-500 pl-6">
+                            Loading question...
+                        </div>
+
+                        <div id="factor-workspace" class="mb-10 p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                    Dimensional Analysis Setup
+                                </h3>
+                                <div class="flex gap-3">
+                                    <button id="toggle-bank-btn" onclick="toggleFactorBank()" class="text-xs bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-xl transition-all font-bold uppercase shadow-sm">
+                                        Hide Factor Bank
+                                    </button>
+                                    <button onclick="checkSetup()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl transition-all font-bold uppercase shadow-md">
+                                        Check Setup
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="factor-bank" class="mb-8 p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Available Factors</span>
+                                    <div class="flex items-center gap-3 bg-slate-100 px-3 py-1.5 rounded-full">
+                                        <span class="text-[10px] text-slate-500 font-bold uppercase">Invert</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="invert-toggle" onchange="renderFactorBank()">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="bank-tiles" class="flex flex-wrap gap-3"></div>
+                            </div>
+                            
+                            <div class="overflow-x-auto pb-4">
+                                <div id="chain-container" class="flex items-center gap-4 min-w-max py-4">
+                                    <div id="given-block" class="bg-white px-6 py-4 border border-slate-200 rounded-2xl shadow-sm ring-1 ring-slate-100 flex items-baseline gap-3">
+                                        <div id="given-display" class="font-black text-blue-600 text-2xl">0.00</div>
+                                        <div id="given-unit-display" class="text-sm font-bold text-slate-500 formula-font">unit</div>
+                                    </div>
+                                    <div id="dynamic-steps" class="flex items-center gap-4"></div>
+                                    <button onclick="addChainStep()" class="flex items-center justify-center w-14 h-14 rounded-full border-2 border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all shrink-0">
+                                        <span class="text-3xl font-bold">+</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="setup-feedback" class="mt-4 p-4 rounded-xl text-sm font-semibold hidden text-center shadow-inner"></div>
+                        </div>
+
+                        <div id="input-container" class="space-y-6 pt-8 border-t border-slate-100">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-3 uppercase tracking-widest">Final Numerical Answer</label>
+                                    <input type="text" id="answer-input" placeholder="0.00" class="w-full px-6 py-5 rounded-2xl border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none text-3xl font-bold transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-3 uppercase tracking-widest">Unit Specification</label>
+                                    <select id="answer-unit-choice" class="w-full bg-slate-50 px-6 py-5 rounded-2xl border-2 border-slate-100 text-slate-700 font-bold text-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 appearance-none cursor-pointer">
+                                        <option value="" disabled selected>Choose units...</option>
+                                        <option value="grams">grams</option>
+                                        <option value="moles">moles</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="submit-btn" class="w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-6 rounded-2xl shadow-lg transition-all transform active:scale-[0.99] text-xl uppercase tracking-widest">Check Final Result</button>
+                        </div>
+
+                        <div id="feedback" class="mt-8 hidden animate-in fade-in slide-in-from-bottom-4">
+                            <div id="feedback-message" class="p-8 rounded-3xl mb-8 text-center text-xl font-bold shadow-sm"></div>
+                            <div id="solution-steps" class="bg-blue-50/50 rounded-3xl p-10 border border-blue-100 text-slate-700">
+                                <h4 class="font-black text-slate-900 mb-8 border-b border-blue-100 pb-4 text-sm uppercase tracking-widest flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Step-by-Step Resolution
+                                </h4>
+                                <div id="steps-content" class="space-y-6 text-base formula-font"></div>
+                            </div>
+                            <button id="next-btn" class="w-full mt-8 bg-white border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white font-black py-5 rounded-2xl transition-all uppercase tracking-widest shadow-md">Next Problem →</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <script>
-        const EQUATIONS = [
-            { equation: "2 H₂ + O₂ → 2 H₂O", substances: [{ name: "H₂", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 1, side: "reactant" }, { name: "H₂O", coefficient: 2, side: "product" }] },
-            { equation: "N₂ + 3 H₂ → 2 NH₃", substances: [{ name: "N₂", coefficient: 1, side: "reactant" }, { name: "H₂", coefficient: 3, side: "reactant" }, { name: "NH₃", coefficient: 2, side: "product" }] },
-            { equation: "CH₄ + 2 O₂ → CO₂ + 2 H₂O", substances: [{ name: "CH₄", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 2, side: "reactant" }, { name: "CO₂", coefficient: 1, side: "product" }, { name: "H₂O", coefficient: 2, side: "product" }] },
-            { equation: "2 Al + 3 Cl₂ → 2 AlCl₃", substances: [{ name: "Al", coefficient: 2, side: "reactant" }, { name: "Cl₂", coefficient: 3, side: "reactant" }, { name: "AlCl₃", coefficient: 2, side: "product" }] },
-            { equation: "C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O", substances: [{ name: "C₃H₈", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 5, side: "reactant" }, { name: "CO₂", coefficient: 3, side: "product" }, { name: "H₂O", coefficient: 4, side: "product" }] },
-            { equation: "Zn + 2 HCl → ZnCl₂ + H₂", substances: [{ name: "Zn", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "reactant" }, { name: "ZnCl₂", coefficient: 1, side: "product" }, { name: "H₂", coefficient: 1, side: "product" }] },
-            { equation: "AgNO₃ + NaCl → AgCl + NaNO₃", substances: [{ name: "AgNO₃", coefficient: 1, side: "reactant" }, { name: "NaCl", coefficient: 1, side: "reactant" }, { name: "AgCl", coefficient: 1, side: "product" }, { name: "NaNO₃", coefficient: 1, side: "product" }] },
-            { equation: "2 KClO₃ → 2 KCl + 3 O₂", substances: [{ name: "KClO₃", coefficient: 2, side: "reactant" }, { name: "KCl", coefficient: 2, side: "product" }, { name: "O₂", coefficient: 3, side: "product" }] },
-            { equation: "Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂", substances: [{ name: "Fe₂O₃", coefficient: 1, side: "reactant" }, { name: "CO", coefficient: 3, side: "reactant" }, { name: "Fe", coefficient: 2, side: "product" }, { name: "CO₂", coefficient: 3, side: "product" }] },
-            { equation: "Mg + 2 HCl → MgCl₂ + H₂", substances: [{ name: "Mg", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "reactant" }, { name: "MgCl₂", coefficient: 1, side: "product" }, { name: "H₂", coefficient: 1, side: "product" }] },
-            { equation: "2 Mg + O₂ → 2 MgO", substances: [{ name: "Mg", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 1, side: "reactant" }, { name: "MgO", coefficient: 2, side: "product" }] },
-            { equation: "H₂ + Cl₂ → 2 HCl", substances: [{ name: "H₂", coefficient: 1, side: "reactant" }, { name: "Cl₂", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "product" }] },
-            { equation: "CaCO₃ → CaO + CO₂", substances: [{ name: "CaCO₃", coefficient: 1, side: "reactant" }, { name: "CaO", coefficient: 1, side: "product" }, { name: "CO₂", coefficient: 1, side: "product" }] },
-            { equation: "2 H₂O₂ → 2 H₂O + O₂", substances: [{ name: "H₂O₂", coefficient: 2, side: "reactant" }, { name: "H₂O", coefficient: 2, side: "product" }, { name: "O₂", coefficient: 1, side: "product" }] },
-            { equation: "P₄ + 5 O₂ → 2 P₂O₅", substances: [{ name: "P₄", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 5, side: "reactant" }, { name: "P₂O₅", coefficient: 2, side: "product" }] },
-            { equation: "2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O", substances: [{ name: "C₂H₆", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 7, side: "reactant" }, { name: "CO₂", coefficient: 4, side: "product" }, { name: "H₂O", coefficient: 6, side: "product" }] },
-            { equation: "S₈ + 8 O₂ → 8 SO₂", substances: [{ name: "S₈", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 8, side: "reactant" }, { name: "SO₂", coefficient: 8, side: "product" }] },
-            { equation: "N₂ + O₂ → 2 NO", substances: [{ name: "N₂", coefficient: 1, side: "reactant" }, { name: "O₂", coefficient: 1, side: "reactant" }, { name: "NO", coefficient: 2, side: "product" }] },
-            { equation: "2 Fe + 3 Cl₂ → 2 FeCl₃", substances: [{ name: "Fe", coefficient: 2, side: "reactant" }, { name: "Cl₂", coefficient: 3, side: "reactant" }, { name: "FeCl₃", coefficient: 2, side: "product" }] },
-            { equation: "2 KI + Cl₂ → 2 KCl + I₂", substances: [{ name: "KI", coefficient: 2, side: "reactant" }, { name: "Cl₂", coefficient: 1, side: "reactant" }, { name: "KCl", coefficient: 2, side: "product" }, { name: "I₂", coefficient: 1, side: "product" }] },
-            { equation: "Pb(NO₃)₂ + 2 KI → PbI₂ + 2 KNO₃", substances: [{ name: "Pb(NO₃)₂", coefficient: 1, side: "reactant" }, { name: "KI", coefficient: 2, side: "reactant" }, { name: "PbI₂", coefficient: 1, side: "product" }, { name: "KNO₃", coefficient: 2, side: "product" }] },
-            { equation: "BaCl₂ + Na₂SO₄ → BaSO₄ + 2 NaCl", substances: [{ name: "BaCl₂", coefficient: 1, side: "reactant" }, { name: "Na₂SO₄", coefficient: 1, side: "reactant" }, { name: "BaSO₄", coefficient: 1, side: "product" }, { name: "NaCl", coefficient: 2, side: "product" }] },
-            { equation: "Cu + 2 AgNO₃ → Cu(NO₃)₂ + 2 Ag", substances: [{ name: "Cu", coefficient: 1, side: "reactant" }, { name: "AgNO₃", coefficient: 2, side: "reactant" }, { name: "Cu(NO₃)₂", coefficient: 1, side: "product" }, { name: "Ag", coefficient: 2, side: "product" }] },
-            { equation: "NaOH + HCl → NaCl + H₂O", substances: [{ name: "NaOH", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 1, side: "reactant" }, { name: "NaCl", coefficient: 1, side: "product" }, { name: "H₂O", coefficient: 1, side: "product" }] },
-            { equation: "2 H₂O → 2 H₂ + O₂", substances: [{ name: "H₂O", coefficient: 2, side: "reactant" }, { name: "H₂", coefficient: 2, side: "product" }, { name: "O₂", coefficient: 1, side: "product" }] },
-            { equation: "4 Fe + 3 O₂ → 2 Fe₂O₃", substances: [{ name: "Fe", coefficient: 4, side: "reactant" }, { name: "O₂", coefficient: 3, side: "reactant" }, { name: "Fe₂O₃", coefficient: 2, side: "product" }] },
-            { equation: "Cl₂ + 2 NaBr → 2 NaCl + Br₂", substances: [{ name: "Cl₂", coefficient: 1, side: "reactant" }, { name: "NaBr", coefficient: 2, side: "reactant" }, { name: "NaCl", coefficient: 2, side: "product" }, { name: "Br₂", coefficient: 1, side: "product" }] },
-            { equation: "Na₂CO₃ + 2 HCl → 2 NaCl + H₂O + CO₂", substances: [{ name: "Na₂CO₃", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 2, side: "reactant" }, { name: "NaCl", coefficient: 2, side: "product" }, { name: "H₂O", coefficient: 1, side: "product" }, { name: "CO₂", coefficient: 1, side: "product" }] },
-            { equation: "NH₃ + HCl → NH₄Cl", substances: [{ name: "NH₃", coefficient: 1, side: "reactant" }, { name: "HCl", coefficient: 1, side: "reactant" }, { name: "NH₄Cl", coefficient: 1, side: "product" }] },
-            { equation: "2 C₄H₁₀ + 13 O₂ → 8 CO₂ + 10 H₂O", substances: [{ name: "C₄H₁₀", coefficient: 2, side: "reactant" }, { name: "O₂", coefficient: 13, side: "reactant" }, { name: "CO₂", coefficient: 8, side: "product" }, { name: "H₂O", coefficient: 10, side: "product" }] }
+        const ATOMIC_WEIGHTS = { 
+            'H': 1.01, 'C': 12.01, 'N': 14.01, 'O': 16.00, 'Na': 22.99, 
+            'Mg': 24.31, 'Al': 26.98, 'S': 32.06, 'Cl': 35.45, 'K': 39.10, 
+            'Ca': 40.08, 'Fe': 55.85, 'Cu': 63.55, 'Zn': 65.38, 'Ag': 107.87, 
+            'I': 126.90, 'Pb': 207.2, 'P': 30.97, 'Br': 79.90, 'Ba': 137.33,
+            'Mn': 54.94
+        };
+        
+        const REACTIONS = [
+            { reactants: [{ f: 'CH4', c: 1 }, { f: 'O2', c: 2 }], products: [{ f: 'CO2', c: 1 }, { f: 'H2O', c: 2 }], components: { 'CH4': { C: 1, H: 4 }, 'O2': { O: 2 }, 'CO2': { C: 1, O: 2 }, 'H2O': { H: 2, O: 1 } } },
+            { reactants: [{ f: 'N2', c: 1 }, { f: 'H2', c: 3 }], products: [{ f: 'NH3', c: 2 }], components: { 'N2': { N: 2 }, 'H2': { H: 2 }, 'NH3': { N: 1, H: 3 } } },
+            { reactants: [{ f: 'Al', c: 2 }, { f: 'Cl2', c: 3 }], products: [{ f: 'AlCl3', c: 2 }], components: { 'Al': { Al: 1 }, 'Cl2': { Cl: 2 }, 'AlCl3': { Al: 1, Cl: 3 } } },
+            { reactants: [{ f: 'Fe2O3', c: 1 }, { f: 'CO', c: 3 }], products: [{ f: 'Fe', c: 2 }, { f: 'CO2', c: 3 }], components: { 'Fe2O3': { Fe: 2, O: 3 }, 'CO': { C: 1, O: 1 }, 'Fe': { Fe: 1 }, 'CO2': { C: 1, O: 2 } } },
+            { reactants: [{ f: 'Na', c: 2 }, { f: 'Cl2', c: 1 }], products: [{ f: 'NaCl', c: 2 }], components: { 'Na': { Na: 1 }, 'Cl2': { Cl: 2 }, 'NaCl': { Na: 1, Cl: 1 } } },
+            { reactants: [{ f: 'C3H8', c: 1 }, { f: 'O2', c: 5 }], products: [{ f: 'CO2', c: 3 }, { f: 'H2O', c: 4 }], components: { 'C3H8': { C: 3, H: 8 }, 'O2': { O: 2 }, 'CO2': { C: 1, O: 2 }, 'H2O': { H: 2, O: 1 } } },
+            { reactants: [{ f: 'AgNO3', c: 1 }, { f: 'NaCl', c: 1 }], products: [{ f: 'AgCl', c: 1 }, { f: 'NaNO3', c: 1 }], components: { 'AgNO3': { Ag: 1, N: 1, O: 3 }, 'NaCl': { Na: 1, Cl: 1 }, 'AgCl': { Ag: 1, Cl: 1 }, 'NaNO3': { Na: 1, N: 1, O: 3 } } }
         ];
 
-        let state = {
-            currentEq: null,
-            substanceA: null,
-            substanceB: null,
-            userInputA: '',
-            userInputB: '',
-            ratioFeedback: null,
-            cf1Top: '',
-            cf1Bottom: '',
-            cf2Top: '',
-            cf2Bottom: '',
-            convFeedback: null,
-            givenAmount: 0,
-            givenSubstance: null,
-            targetSubstance: null,
-            selectedFactorIdx: null,
-            selectionFeedback: null,
-            
-            isBalancedMode: true,
-            balancingFeedback: null,
-            userBalancingCoeffs: {},
+        let currentProblem = null;
+        let stats = { solved: 0, attempted: 0 };
+        let factorBankVisible = true; // Default to shown
+        let currentBankFactors = [];
+        let calcVal = "0";
+        let activeMode = 'random'; 
+        let activeCourse = 'reg'; 
 
-            ratioCorrect: 0,
-            ratioTotal: 0,
-            factorsCorrect: 0,
-            factorsTotal: 0,
-            analysisCorrect: 0,
-            analysisTotal: 0,
-
-            showHelp: false,
-            openDropdown: null
-        };
-
-        function generateNewQuestion() {
-            const randomEq = EQUATIONS[Math.floor(Math.random() * EQUATIONS.length)];
-            let indices = [];
-            while (indices.length < 2) {
-                let r = Math.floor(Math.random() * randomEq.substances.length);
-                if (!indices.includes(r)) indices.push(r);
-            }
-
-            const subA = randomEq.substances[indices[0]];
-            const subB = randomEq.substances[indices[1]];
-            const isGivenA = Math.random() > 0.5;
-            const amount = (Math.floor(Math.random() * 20) + 1).toFixed(1);
-
-            Object.assign(state, {
-                currentEq: randomEq,
-                substanceA: subA,
-                substanceB: subB,
-                userInputA: '',
-                userInputB: '',
-                ratioFeedback: null,
-                cf1Top: '',
-                cf1Bottom: '',
-                cf2Top: '',
-                cf2Bottom: '',
-                convFeedback: null,
-                givenAmount: amount,
-                givenSubstance: isGivenA ? subA : subB,
-                targetSubstance: isGivenA ? subB : subA,
-                selectedFactorIdx: null,
-                selectionFeedback: null,
-                openDropdown: null,
-                balancingFeedback: null,
-                userBalancingCoeffs: {}
-            });
-            render();
+        function updateCalcDisplay() { document.getElementById('calc-display').innerText = calcVal; }
+        function calcInput(char) {
+            if (calcVal === "0" && !isNaN(char)) calcVal = char;
+            else calcVal += char;
+            updateCalcDisplay();
+        }
+        function calcClear() { calcVal = "0"; updateCalcDisplay(); }
+        function calcSolve() {
+            try {
+                let result = eval(calcVal.replace(/×/g, '*'));
+                calcVal = String(Number(result.toFixed(4)));
+            } catch (e) { calcVal = "Error"; }
+            updateCalcDisplay();
         }
 
-        function toggleMode() {
-            state.isBalancedMode = !state.isBalancedMode;
-            generateNewQuestion();
+        function formatFormula(f) {
+            return f.replace(/([a-zA-Z\)])(\d+)/g, '$1<span class="subscript">$2</span>');
         }
 
-        function toggleHelp() {
-            state.showHelp = !state.showHelp;
-            render();
+        function getMolarMass(formula, components) {
+            let total = 0;
+            for (let el in components) total += ATOMIC_WEIGHTS[el] * components[el];
+            return parseFloat(total.toFixed(2));
         }
 
-        function handleValueSelection(key, value) {
-            state[key] = value;
-            if (key === 'userInputA' || key === 'userInputB') state.ratioFeedback = null;
-            if (key.startsWith('cf')) state.convFeedback = null;
-            if (key.startsWith('balancing_')) state.balancingFeedback = null;
-            state.openDropdown = null;
-            render();
-        }
-
-        function checkBalancing() {
-            let allCorrect = true;
-            state.currentEq.substances.forEach((sub, idx) => {
-                const userVal = parseInt(state[`balancing_${idx}`]) || 1;
-                if (userVal !== sub.coefficient) allCorrect = false;
-            });
-            state.balancingFeedback = allCorrect ? 'correct' : 'incorrect';
-            render();
-        }
-
-        function checkRatio() {
-            const isCorrect = parseInt(state.userInputA) === state.substanceA.coefficient && 
-                             parseInt(state.userInputB) === state.substanceB.coefficient;
-            state.ratioTotal++;
-            if (isCorrect) state.ratioCorrect++;
-            state.ratioFeedback = isCorrect ? 'correct' : 'incorrect';
-            render();
-        }
-
-        function checkFactors() {
-            const isCf1Correct = parseInt(state.cf1Top) === state.substanceA.coefficient && 
-                                parseInt(state.cf1Bottom) === state.substanceB.coefficient;
-            const isCf2Correct = parseInt(state.cf2Top) === state.substanceB.coefficient && 
-                                parseInt(state.cf2Bottom) === state.substanceA.coefficient;
-            const isAllCorrect = isCf1Correct && isCf2Correct;
-            state.factorsTotal++;
-            if (isAllCorrect) state.factorsCorrect++;
-            state.convFeedback = isAllCorrect ? 'correct' : 'incorrect';
-            render();
-        }
-
-        function selectBridge(idx) {
-            if (state.selectionFeedback === 'correct') return;
-            state.selectedFactorIdx = idx;
-            let isCorrect = (idx === 0) ? (state.givenSubstance.name === state.substanceB.name) : (state.givenSubstance.name === state.substanceA.name);
-            state.analysisTotal++;
-            if (isCorrect) state.analysisCorrect++;
-            state.selectionFeedback = isCorrect ? 'correct' : 'incorrect';
-            render();
-        }
-
-        function resetGame() {
-            state.ratioCorrect = state.ratioTotal = state.factorsCorrect = state.factorsTotal = state.analysisCorrect = state.analysisTotal = 0;
-            generateNewQuestion();
-        }
-
-        function renderDropdown(value, key, label, id, isLocked, isBalancing = false) {
-            const isOpen = state.openDropdown === id;
-            const displayValue = value || '?';
-            
-            let buttonClass = isBalancing 
-                ? "w-14 h-12 text-xl flex items-center justify-center gap-1 rounded-lg border-2 transition-all outline-none "
-                : "w-20 h-16 text-2xl flex items-center justify-center gap-1 rounded-xl border-2 transition-all outline-none ";
-            
-            if (isLocked) {
-                buttonClass += isBalancing 
-                    ? "bg-emerald-900 border-emerald-500 text-emerald-100 cursor-default shadow-sm"
-                    : "bg-emerald-50 border-emerald-500 text-emerald-700 cursor-default shadow-sm";
+        function countSigFigs(str) {
+            const n = str.trim().replace('-', '');
+            if (!/\d/.test(n)) return 0;
+            if (n.includes('.')) {
+                return n.replace('.', '').replace(/^0+/, '').length;
             } else {
-                buttonClass += isBalancing
-                    ? "bg-slate-800 border-slate-600 focus:border-indigo-500 hover:border-slate-400 text-white cursor-pointer shadow-sm"
-                    : "bg-white border-slate-200 focus:border-indigo-500 hover:border-slate-300 text-slate-700 cursor-pointer shadow-sm";
+                return n.replace(/0+$/, '').replace(/^0+/, '').length;
+            }
+        }
+
+        function formatToSigFigs(num, sigFigs) {
+            if (num === 0) return "0";
+            let scientific = num.toPrecision(sigFigs);
+            if (scientific.includes('e')) {
+                let [base, exp] = scientific.split('e');
+                let expVal = parseInt(exp);
+                if (expVal > -6 && expVal < 10) {
+                   return Number(scientific).toLocaleString('en-US', {
+                        useGrouping: false,
+                        minimumSignificantDigits: sigFigs,
+                        maximumSignificantDigits: sigFigs
+                    });
+                }
+                return scientific;
+            }
+            return scientific;
+        }
+
+        function calculateAnswerInUnit(p, targetUnitChoice) {
+            let res = p.givenValue;
+            if (p.givenUnit === 'grams') res /= p.givenMolarMass;
+            res *= (p.targetCoeff / p.givenCoeff);
+            if (targetUnitChoice === 'grams') res *= p.targetMolarMass;
+            return res;
+        }
+
+        function setMode(mode) {
+            activeMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`mode-${mode}`).classList.add('active');
+            generateProblem();
+        }
+
+        function setCourse(course) {
+            activeCourse = course;
+            document.querySelectorAll('.course-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`course-${course}`).classList.add('active');
+        }
+
+        function generateProblem() {
+            const modes = ['mole-mole', 'mass-mole', 'mole-mass', 'mass-mass'];
+            const type = activeMode === 'random' ? modes[Math.floor(Math.random() * modes.length)] : activeMode;
+            const reaction = REACTIONS[Math.floor(Math.random() * REACTIONS.length)];
+            const all = [...reaction.reactants, ...reaction.products];
+            const given = all[Math.floor(Math.random() * all.length)];
+            let target; do { target = all[Math.floor(Math.random() * all.length)]; } while (target.f === given.f);
+            
+            const decimals = Math.floor(Math.random() * 3);
+            const gValStr = (Math.random() * 20 + 1).toFixed(decimals);
+            const gUnit = (type.startsWith('mass')) ? 'grams' : 'moles';
+            const defaultTargetUnit = (type.endsWith('mass')) ? 'grams' : 'moles';
+
+            currentProblem = {
+                reaction, 
+                givenFormula: given.f, 
+                givenCoeff: given.c, 
+                givenValueStr: gValStr,
+                givenValue: parseFloat(gValStr), 
+                givenUnit: gUnit,
+                givenMolarMass: getMolarMass(given.f, reaction.components[given.f]),
+                targetFormula: target.f, 
+                targetCoeff: target.c, 
+                targetUnit: defaultTargetUnit,
+                targetMolarMass: getMolarMass(target.f, reaction.components[target.f]),
+                type,
+                sigFigs: countSigFigs(gValStr)
+            };
+            resetChain();
+            renderProblem();
+            generateFactorBankData();
+        }
+
+        function renderProblem() {
+            const p = currentProblem;
+            const rText = p.reaction.reactants.map(r => `<span><span class="coefficient">${r.c > 1 ? r.c : ''}</span>${formatFormula(r.f)}</span>`).join(' + ');
+            const pText = p.reaction.products.map(pr => `<span><span class="coefficient">${pr.c > 1 ? pr.c : ''}</span>${formatFormula(pr.f)}</span>`).join(' + ');
+            document.getElementById('equation-display').innerHTML = `${rText} <span class="text-blue-500 font-bold mx-2">→</span> ${pText}`;
+            
+            const actionVerb = p.reaction.products.some(item => item.f === p.targetFormula) ? 'produced' : 'consumed';
+            document.getElementById('question-text').innerHTML = `Given <span class="text-blue-600 font-bold">${p.givenValueStr} ${p.givenUnit} ${formatFormula(p.givenFormula)}</span>, calculate the <span class="text-blue-600 font-bold">${p.targetUnit === 'grams' ? 'mass in grams' : 'moles'}</span> of <span class="text-blue-600 font-bold">${formatFormula(p.targetFormula)}</span> ${actionVerb}.`;
+            
+            document.getElementById('given-display').innerText = p.givenValueStr;
+            document.getElementById('given-unit-display').innerHTML = `${p.givenUnit} ${formatFormula(p.givenFormula)}`;
+            document.getElementById('input-container').classList.remove('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-unit-choice').value = '';
+        }
+
+        function toggleFactorBank() {
+            factorBankVisible = !factorBankVisible;
+            document.getElementById('factor-bank').classList.toggle('hidden', !factorBankVisible);
+            document.getElementById('toggle-bank-btn').innerText = factorBankVisible ? "Hide Factor Bank" : "Show Factor Bank";
+        }
+
+        function generateFactorBankData() {
+            const p = currentProblem;
+            currentBankFactors = [];
+            const comps = [...p.reaction.reactants, ...p.reaction.products];
+            comps.forEach(c => {
+                const mm = getMolarMass(c.f, p.reaction.components[c.f]);
+                currentBankFactors.push({ top: `1 mol ${c.f}`, bottom: `${mm.toFixed(2)} g ${c.f}` });
+            });
+            currentBankFactors.push({ top: `${p.targetCoeff} mol ${p.targetFormula}`, bottom: `${p.givenCoeff} mol ${p.givenFormula}` });
+            renderFactorBank();
+        }
+
+        function renderFactorBank() {
+            const bank = document.getElementById('bank-tiles');
+            const inv = document.getElementById('invert-toggle').checked;
+            bank.innerHTML = '';
+            currentBankFactors.forEach(f => {
+                const top = inv ? f.bottom : f.top;
+                const bot = inv ? f.top : f.bottom;
+                const tile = document.createElement('div');
+                tile.className = "factor-tile flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl p-3 w-48 shadow-sm justify-center text-center";
+                tile.onclick = () => addChainStep(top, bot);
+                tile.innerHTML = `<div class="text-xs font-bold">${formatFormula(top)}</div><div class="w-full h-[1px] bg-slate-300 my-1"></div><div class="text-xs font-bold">${formatFormula(bot)}</div>`;
+                bank.appendChild(tile);
+            });
+        }
+
+        function addChainStep(t = '', b = '') {
+            const id = Date.now();
+            const div = document.createElement('div');
+            div.className = "flex items-center gap-4 animate-in fade-in slide-in-from-left-2";
+            div.id = `step-${id}`;
+            div.innerHTML = `<span class="text-slate-300 font-bold text-xl">×</span><div class="bg-white p-3 border border-slate-200 rounded-2xl shadow-sm"><div contenteditable="true" class="factor-editable mb-1 formula-font">${t.includes('<') ? t : formatFormula(t)}</div><div class="fraction-line"></div><div contenteditable="true" class="factor-editable mt-1 formula-font">${b.includes('<') ? b : formatFormula(b)}</div><button onclick="document.getElementById('step-${id}').remove()" class="text-[9px] text-rose-400 mt-2 uppercase font-black w-full">Remove</button></div>`;
+            document.getElementById('dynamic-steps').appendChild(div);
+        }
+
+        function resetChain() { document.getElementById('dynamic-steps').innerHTML = ''; document.getElementById('setup-feedback').classList.add('hidden'); }
+
+        function checkSetup() {
+            const steps = document.getElementById('dynamic-steps').children;
+            const feedback = document.getElementById('setup-feedback');
+            feedback.classList.remove('hidden');
+
+            if (steps.length === 0) {
+                showSetupFeedback("Setup your dimensional analysis chain before checking.", "amber");
+                return;
             }
 
-            const labelColorClass = isBalancing ? "text-white" : "text-slate-700";
+            const p = currentProblem;
+            const validFormulas = Object.keys(p.reaction.components);
 
-            return `
-                <div class="flex items-center gap-1.5 relative">
-                    <div class="relative">
-                        <button onclick="if(!${isLocked}) { state.openDropdown = state.openDropdown === '${id}' ? null : '${id}'; render(); }" class="${buttonClass}">
-                            ${displayValue}
-                            ${!isLocked ? `<i data-lucide="chevron-down" class="${isBalancing ? 'w-3 h-3' : 'w-4 h-4'} text-slate-400 transform ${isOpen ? 'rotate-180' : ''}"></i>` : ''}
-                        </button>
-                        ${isOpen && !isLocked ? `
-                            <div class="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] overflow-hidden mt-1">
-                                <div class="max-h-40 overflow-y-auto custom-scrollbar">
-                                    ${Array.from({length: 15}, (_, i) => i + 1).map(num => `
-                                        <button onclick="handleValueSelection('${key}', '${num}')" class="w-full py-2 text-lg font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b last:border-0 border-slate-50">
-                                            ${num}
-                                        </button>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                    ${label ? `<div class="flex items-baseline gap-1 ml-1 whitespace-nowrap">
-                        <span class="${isBalancing ? 'text-sm' : 'text-lg'} font-bold ${isBalancing ? 'hidden' : labelColorClass}">${isBalancing ? '' : 'mol'}</span>
-                        <span class="text-xl md:text-2xl font-bold ${labelColorClass} font-chem">${label}</span>
-                    </div>` : ''}
-                </div>
+            const normalizeUnit = (u) => {
+                if (!u) return "";
+                const s = u.toLowerCase().trim();
+                if (s.startsWith('g')) return 'grams';
+                if (s.startsWith('mol')) return 'moles';
+                return s;
+            };
+
+            const checkFormulaCapitalization = (userFormula) => {
+                const match = validFormulas.find(f => f.toLowerCase() === userFormula.toLowerCase());
+                if (match && match !== userFormula) return match;
+                return null;
+            };
+
+            const parseFactor = (text) => {
+                const match = text.match(/([\d\.]+)\s*([a-zA-Z]+)\s*([A-Za-z0-9\(\)]+)/i);
+                if (!match) return null;
+                return {
+                    val: parseFloat(match[1]),
+                    unit: normalizeUnit(match[2]),
+                    formula: match[3],
+                    originalFormula: match[3]
+                };
+            };
+
+            let currentUnitType = normalizeUnit(p.givenUnit);
+            let currentFormula = p.givenFormula;
+            
+            for (let i = 0; i < steps.length; i++) {
+                const topText = steps[i].querySelector('.factor-editable:first-child').innerText.trim();
+                const botText = steps[i].querySelector('.factor-editable:nth-child(3)').innerText.trim();
+                
+                const topObj = parseFactor(topText);
+                const botObj = parseFactor(botText);
+
+                if (!topObj || !botObj) {
+                    showSetupFeedback(`Step ${i+1}: Formatting error. Use "number unit formula".`, "rose");
+                    return;
+                }
+
+                // 1. CAPITALIZATION CHECK FIRST
+                const topCapError = checkFormulaCapitalization(topObj.originalFormula);
+                if (topCapError) {
+                    showSetupFeedback(`Step ${i+1}: Capitalization error. Did you mean "${topCapError}" instead of "${topObj.originalFormula}"?`, "rose");
+                    return;
+                }
+                const botCapError = checkFormulaCapitalization(botObj.originalFormula);
+                if (botCapError) {
+                    showSetupFeedback(`Step ${i+1}: Capitalization error. Did you mean "${botCapError}" instead of "${botObj.originalFormula}"?`, "rose");
+                    return;
+                }
+
+                // 2. UNIT CANCELLATION CHECK
+                if (botObj.unit !== currentUnitType || botObj.formula !== currentFormula) {
+                    showSetupFeedback(`Step ${i+1}: The bottom part doesn't cancel the previous unit "${currentUnitType} ${currentFormula}".`, "rose");
+                    return;
+                }
+
+                // 3. NUMERICAL ACCURACY CHECK
+                // Case A: Molar Mass conversion (grams <-> moles)
+                if (topObj.unit !== botObj.unit) {
+                    const formula = topObj.formula;
+                    const expectedMM = getMolarMass(formula, p.reaction.components[formula]);
+                    const userMM = (topObj.unit === 'grams') ? topObj.val : botObj.val;
+                    const moleVal = (topObj.unit === 'moles') ? topObj.val : botObj.val;
+
+                    if (Math.abs(moleVal - 1) > 0.001) {
+                        showSetupFeedback(`Step ${i+1}: For molar mass, one side must be exactly 1 mole.`, "rose");
+                        return;
+                    }
+                    if (Math.abs(userMM - expectedMM) > 0.05) {
+                        showSetupFeedback(`Step ${i+1}: Incorrect molar mass for ${formula}. Periodic table says ${expectedMM}.`, "rose");
+                        return;
+                    }
+                } 
+                // Case B: Mole-to-Mole conversion (moles <-> moles)
+                else if (topObj.unit === 'moles' && botObj.unit === 'moles') {
+                    const topFormula = topObj.formula;
+                    const botFormula = botObj.formula;
+                    
+                    // Find correct coefficients from the reaction array
+                    const allComps = [...p.reaction.reactants, ...p.reaction.products];
+                    const topData = allComps.find(c => c.f === topFormula);
+                    const botData = allComps.find(c => c.f === botFormula);
+
+                    if (Math.abs(topObj.val - topData.c) > 0.001) {
+                        showSetupFeedback(`Step ${i+1}: Incorrect coefficient for ${topFormula}. Balanced equation says ${topData.c}.`, "rose");
+                        return;
+                    }
+                    if (Math.abs(botObj.val - botData.c) > 0.001) {
+                        showSetupFeedback(`Step ${i+1}: Incorrect coefficient for ${botFormula}. Balanced equation says ${botData.c}.`, "rose");
+                        return;
+                    }
+                }
+
+                currentUnitType = topObj.unit;
+                currentFormula = topObj.formula;
+            }
+
+            const targetUnitType = normalizeUnit(p.targetUnit);
+            if (currentUnitType === targetUnitType && currentFormula === p.targetFormula) {
+                showSetupFeedback("Setup is perfect! Now calculate the result.", "emerald");
+            } else {
+                showSetupFeedback(`Your chain results in ${currentUnitType} ${currentFormula}, not the target ${targetUnitType} ${p.targetFormula}.`, "amber");
+            }
+        }
+
+        function showSetupFeedback(msg, color) {
+            const feedback = document.getElementById('setup-feedback');
+            const classes = { rose: "bg-rose-50 text-rose-700 border-rose-200", amber: "bg-amber-50 text-amber-700 border-amber-200", emerald: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+            feedback.className = `mt-4 p-4 rounded-xl text-sm font-semibold border ${classes[color]}`;
+            feedback.innerText = msg;
+        }
+
+        function checkAnswer() {
+            const p = currentProblem;
+            const inputStr = document.getElementById('answer-input').value.trim();
+            const val = parseFloat(inputStr);
+            const unit = document.getElementById('answer-unit-choice').value;
+            
+            if (isNaN(val) || !unit) return;
+
+            const exactCorrect = calculateAnswerInUnit(p, unit);
+            let isCorrect = false;
+            let errorType = "";
+
+            if (activeCourse === 'honors') {
+                const userSigFigs = countSigFigs(inputStr);
+                const targetSigFigs = p.sigFigs;
+                const valueMatch = Math.abs(val - exactCorrect) / exactCorrect < 0.02;
+                const sfMatch = userSigFigs === targetSigFigs;
+
+                if (valueMatch && sfMatch) isCorrect = true;
+                else if (valueMatch && !sfMatch) errorType = "Sig Fig Error";
+            } else {
+                isCorrect = Math.abs(val - exactCorrect) < Math.max(0.01, exactCorrect * 0.02);
+            }
+            
+            stats.attempted++; if (isCorrect) stats.solved++;
+            updateStatsUI();
+
+            const feed = document.getElementById('feedback');
+            const msg = document.getElementById('feedback-message');
+            feed.classList.remove('hidden');
+            
+            if (isCorrect) {
+                msg.className = "p-8 rounded-3xl mb-8 text-center text-xl font-bold shadow-sm bg-emerald-500 text-white";
+                msg.innerText = "Excellent Work! That is correct.";
+            } else if (errorType === "Sig Fig Error") {
+                msg.className = "p-8 rounded-3xl mb-8 text-center text-xl font-bold shadow-sm bg-amber-500 text-white";
+                msg.innerHTML = `Significant Figure Error!<br><span class="text-sm font-normal">The numerical value is correct, but the given value (${p.givenValueStr}) had ${p.sigFigs} sig figs. Your answer must match that precision.</span>`;
+            } else {
+                msg.className = "p-8 rounded-3xl mb-8 text-center text-xl font-bold shadow-sm bg-rose-500 text-white";
+                const displayCorrect = activeCourse === 'honors' ? formatToSigFigs(exactCorrect, p.sigFigs) : exactCorrect.toFixed(2);
+                msg.innerText = `Not quite. The correct value is ${displayCorrect} ${unit}.`;
+            }
+            
+            generateSolutionSteps(exactCorrect, unit);
+        }
+
+        function generateSolutionSteps(correct, unit) {
+            const p = currentProblem;
+            const cont = document.getElementById('steps-content');
+            let molesStart = p.givenUnit === 'grams' ? p.givenValue / p.givenMolarMass : p.givenValue;
+            let targetMoles = molesStart * (p.targetCoeff / p.givenCoeff);
+            
+            const sfDisplay = activeCourse === 'honors' ? `<div class="mt-4 p-3 bg-blue-100/50 rounded-xl text-xs"><strong>Precision Note:</strong> Starting value (${p.givenValueStr}) has <strong>${p.sigFigs}</strong> sig figs. Decimal placement or zeros in your answer determine its precision.</div>` : '';
+
+            cont.innerHTML = `
+                <div class="flex gap-4 items-start"><span class="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">1</span><div>Convert given to moles: <strong>${molesStart.toFixed(4)} mol ${p.givenFormula}</strong></div></div>
+                <div class="flex gap-4 items-start"><span class="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">2</span><div>Apply mole ratio: <strong>${targetMoles.toFixed(4)} mol ${p.targetFormula}</strong></div></div>
+                <div class="flex gap-4 items-start"><span class="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">3</span><div>Final result: <strong>${activeCourse === 'honors' ? formatToSigFigs(correct, p.sigFigs) : correct.toFixed(2)} ${unit}</strong></div></div>
+                ${sfDisplay}
             `;
         }
 
-        function render() {
-            const app = document.getElementById('app');
-            if (!state.currentEq) return;
-
-            const reactants = state.currentEq.substances.filter(s => s.side === 'reactant');
-            const products = state.currentEq.substances.filter(s => s.side === 'product');
-
-            const isBalancingStepVisible = !state.isBalancedMode && state.balancingFeedback !== 'correct';
-            const isPracticeStepVisible = state.isBalancedMode || state.balancingFeedback === 'correct';
-
-            app.innerHTML = `
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
-                    <div class="flex flex-col lg:flex-row justify-between items-start mb-8 gap-6">
-                        <div class="flex items-center gap-3 text-indigo-600">
-                            <i data-lucide="beaker" class="w-10 h-10 mt-1"></i>
-                            <div class="flex flex-col">
-                                <h1 class="text-2xl font-bold leading-tight">ACHS Chemistry Practice</h1>
-                                <p class="text-sm font-semibold text-slate-500 uppercase tracking-widest leading-none">mole ratios</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex flex-col md:flex-row items-end md:items-center gap-4 md:gap-8 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <div class="flex gap-6 md:gap-8">
-                                <div class="text-center"><p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Ratio</p><p class="text-lg font-bold text-slate-700 leading-none">${state.ratioCorrect}<span class="text-slate-300 font-normal px-1">/</span>${state.ratioTotal}</p></div>
-                                <div class="text-center"><p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Factors</p><p class="text-lg font-bold text-slate-700 leading-none">${state.factorsCorrect}<span class="text-slate-300 font-normal px-1">/</span>${state.factorsTotal}</p></div>
-                                <div class="text-center"><p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Analysis</p><p class="text-lg font-bold text-slate-700 leading-none">${state.analysisCorrect}<span class="text-slate-300 font-normal px-1">/</span>${state.analysisTotal}</p></div>
-                            </div>
-                            <button onclick="toggleHelp()" class="p-2 hover:bg-slate-100 rounded-full transition-colors hidden md:block"><i data-lucide="help-circle" class="w-6 h-6 text-slate-400"></i></button>
-                        </div>
-                    </div>
-
-                    ${state.showHelp ? `<div class="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800 animate-in fade-in slide-in-from-top-2"><p class="font-bold mb-1 underline">Dimensional Analysis</p><p>We start with a "Given" value. We multiply by a conversion factor where the units we don't want anymore go on the bottom so they cancel out.</p></div>` : ''}
-
-                    <!-- MAIN EQUATION DISPLAY -->
-                    <div class="bg-slate-900 rounded-xl p-6 md:p-8 mb-8 shadow-inner overflow-x-auto min-h-[160px] relative flex flex-col items-center justify-center">
-                        
-                        <!-- Toggle inside the field -->
-                        <div class="absolute left-4 top-4 flex flex-col gap-1 items-start bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                             <div class="flex items-center gap-2">
-                                <label class="switch">
-                                    <input type="checkbox" ${!state.isBalancedMode ? 'checked' : ''} onclick="toggleMode()">
-                                    <span class="slider"></span>
-                                </label>
-                                <span class="text-[9px] font-bold uppercase ${!state.isBalancedMode ? 'text-indigo-400' : 'text-slate-400'}">Equation</span>
-                             </div>
-                             <p class="text-[8px] text-slate-500 uppercase tracking-widest font-bold px-1">${state.isBalancedMode ? 'Mode: Balanced' : 'Mode: Unbalanced'}</p>
-                        </div>
-
-                        <p class="text-indigo-300 text-[10px] uppercase tracking-widest mb-4 font-bold">
-                            ${state.isBalancedMode ? 'Balanced Chemical Equation' : (state.balancingFeedback === 'correct' ? 'Equation Successfully Balanced' : 'Step 0: Balance the Equation')}
-                        </p>
-                        
-                        ${state.isBalancedMode || state.balancingFeedback === 'correct' ? `
-                            <h2 class="text-2xl md:text-4xl font-chem text-white whitespace-nowrap">${state.currentEq.equation}</h2>
-                        ` : `
-                            <div class="flex flex-nowrap items-center justify-center gap-4 text-white font-chem text-xl md:text-3xl pt-2">
-                                <!-- Reactants -->
-                                ${reactants.map((sub, idx) => `
-                                    <div class="flex items-center gap-2">
-                                        ${renderDropdown(state[`balancing_${state.currentEq.substances.indexOf(sub)}`], `balancing_${state.currentEq.substances.indexOf(sub)}`, sub.name, `bal_${idx}`, false, true)}
-                                    </div>
-                                    ${idx < reactants.length - 1 ? '<span class="text-indigo-400 mx-1 text-2xl">+</span>' : ''}
-                                `).join('')}
-                                
-                                <span class="text-indigo-400 mx-2 text-2xl">→</span>
-                                
-                                <!-- Products -->
-                                ${products.map((sub, idx) => `
-                                    <div class="flex items-center gap-2">
-                                        ${renderDropdown(state[`balancing_${state.currentEq.substances.indexOf(sub)}`], `balancing_${state.currentEq.substances.indexOf(sub)}`, sub.name, `bal_p_${idx}`, false, true)}
-                                    </div>
-                                    ${idx < products.length - 1 ? '<span class="text-indigo-400 mx-1 text-2xl">+</span>' : ''}
-                                `).join('')}
-                            </div>
-                            <button onclick="checkBalancing()" class="mt-6 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs transition-all shadow-md active:scale-95">Check Equation</button>
-                        `}
-                    </div>
-
-                    ${state.balancingFeedback === 'incorrect' && !state.isBalancedMode ? `
-                        <div class="mb-8 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100 max-w-2xl mx-auto">
-                            <i data-lucide="x-circle" class="mt-1 flex-shrink-0 text-red-600"></i>
-                            <div>
-                                <p class="font-bold text-lg mb-0.5 underline decoration-red-300">Not Balanced!</p>
-                                <p>Count the atoms on both sides. Make sure the number of atoms for each element is equal on the reactant and product sides.</p>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <!-- PRACTICE FLOW -->
-                    <div class="${isPracticeStepVisible ? 'opacity-100' : 'opacity-20 pointer-events-none'}" id="practice-steps">
-                        <!-- STEP 1 -->
-                        <div class="transition-all duration-500 ${state.ratioFeedback === 'correct' ? 'opacity-40 pointer-events-none' : 'opacity-100'}">
-                            <div class="text-center mb-4">
-                                <h3 class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">Step 1</h3>
-                                <p class="text-lg text-slate-600 font-medium">Identify the mole ratio of <span class="font-chem font-bold text-indigo-700">${state.substanceA.name}</span> to <span class="font-chem font-bold text-indigo-700">${state.substanceB.name}</span>:</p>
-                            </div>
-                            <div class="flex items-center justify-center gap-6 mb-4">
-                                ${renderDropdown(state.userInputA, 'userInputA', state.substanceA.name, 'A', state.ratioFeedback === 'correct')}
-                                <div class="text-4xl text-slate-900 font-bold">:</div>
-                                ${renderDropdown(state.userInputB, 'userInputB', state.substanceB.name, 'B', state.ratioFeedback === 'correct')}
-                            </div>
-                            ${state.ratioFeedback !== 'correct' ? `<button onclick="checkRatio()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all ${(!state.userInputA || !state.userInputB) ? 'opacity-50 cursor-not-allowed' : ''}" ${(!state.userInputA || !state.userInputB) ? 'disabled' : ''}>Check Ratio</button>` : ''}
-                            ${state.ratioFeedback === 'incorrect' ? `<div class="mt-4 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100"><i data-lucide="x-circle" class="mt-1 flex-shrink-0 text-red-600"></i><div><p class="font-bold text-lg mb-0.5 underline decoration-red-300">Needs Revision!</p><p>Check the coefficients in the equation above one more time. Look for the large numbers in front of the molecules.</p></div></div>` : ''}
-                        </div>
-
-                        <!-- STEP 2 -->
-                        ${state.ratioFeedback === 'correct' ? `
-                            <div class="mt-8 pt-8 border-t border-slate-100 transition-all duration-500 ${state.convFeedback === 'correct' ? 'opacity-40 pointer-events-none' : 'opacity-100'}">
-                                <div class="text-center mb-4"><h3 class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">Step 2</h3><p class="text-lg text-slate-600 font-medium">Construct the potential conversion factors:</p></div>
-                                <div class="flex flex-col md:flex-row items-center justify-center gap-12 mb-6">
-                                    <div class="flex flex-col items-center">${renderDropdown(state.cf1Top, 'cf1Top', state.substanceA.name, 'CF1T', state.convFeedback === 'correct')}<div class="w-full h-1 bg-slate-800 rounded-full my-2"></div>${renderDropdown(state.cf1Bottom, 'cf1Bottom', state.substanceB.name, 'CF1B', state.convFeedback === 'correct')}</div>
-                                    <div class="text-xl font-bold text-slate-300 hidden md:block">AND</div>
-                                    <div class="flex flex-col items-center">${renderDropdown(state.cf2Top, 'cf2Top', state.substanceB.name, 'CF2T', state.convFeedback === 'correct')}<div class="w-full h-1 bg-slate-800 rounded-full my-2"></div>${renderDropdown(state.cf2Bottom, 'cf2Bottom', state.substanceA.name, 'CF2B', state.convFeedback === 'correct')}</div>
-                                </div>
-                                ${state.convFeedback !== 'correct' ? `<button onclick="checkFactors()" class="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all ${(!state.cf1Top || !state.cf1Bottom || !state.cf2Top || !state.cf2Bottom) ? 'opacity-50 cursor-not-allowed' : ''}" ${(!state.cf1Top || !state.cf1Bottom || !state.cf2Top || !state.cf2Bottom) ? 'disabled' : ''}>Check Factors</button>` : ''}
-                                ${state.convFeedback === 'incorrect' ? `<div class="mt-4 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100"><i data-lucide="alert-circle" class="mt-1 flex-shrink-0 text-red-600"></i><div><p class="font-bold text-lg mb-0.5 underline decoration-red-300">Factor Error!</p><p>Remember: These are fractions built from the ratio you just found. The numbers must match your ratio in Step 1!</p></div></div>` : ''}
-                            </div>
-                        ` : ''}
-
-                        <!-- STEP 3 -->
-                        ${state.convFeedback === 'correct' ? `
-                            <div class="mt-8 pt-8 border-t border-slate-100 transition-all duration-500">
-                                <div class="text-center mb-6"><h3 class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-1">Step 3: Dimensional Analysis</h3><p class="text-lg text-slate-600">Solve the problem by choosing the correct conversion factor.</p></div>
-                                <div class="w-full overflow-x-auto pb-4 custom-scrollbar">
-                                    <div class="flex flex-nowrap items-center justify-center gap-3 md:gap-5 min-w-max px-4">
-                                        <div class="bg-orange-50 border-2 border-orange-200 px-5 py-4 rounded-xl shadow-sm whitespace-nowrap min-w-[180px]"><p class="text-[10px] font-bold text-orange-600 uppercase mb-1">Given Value</p><div class="flex items-center gap-2"><span class="text-xl font-bold text-slate-800">${state.givenAmount}</span><span class="text-lg font-bold text-slate-700">mol <span class="font-chem">${state.givenSubstance.name}</span></span></div></div>
-                                        <div class="text-2xl font-bold text-slate-400">×</div>
-                                        <div class="border-2 border-dashed px-5 py-2 rounded-xl min-w-[240px] h-[100px] flex items-center justify-center transition-all ${state.selectionFeedback === 'correct' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-slate-50'}">${state.selectedFactorIdx === null ? `<div class="text-center whitespace-nowrap"><p class="text-xs font-bold text-slate-400 uppercase mb-1">Conversion Factor</p><p class="text-slate-400 text-sm italic">Choose below...</p></div>` : `<div class="flex flex-col items-center whitespace-nowrap"><p class="text-lg font-bold text-slate-800">${state.selectedFactorIdx === 0 ? state.cf1Top : state.cf2Top} mol <span class="font-chem">${state.selectedFactorIdx === 0 ? state.substanceA.name : state.substanceB.name}</span></p><div class="w-full h-0.5 bg-slate-800 my-1"></div><p class="text-lg font-bold text-slate-800">${state.selectedFactorIdx === 0 ? state.cf1Bottom : state.cf2Bottom} mol <span class="font-chem">${state.selectedFactorIdx === 0 ? state.substanceB.name : state.substanceA.name}</span></p></div>`}</div>
-                                        <div class="text-2xl font-bold text-slate-400">=</div>
-                                        <div class="bg-slate-100 border-2 border-slate-200 px-5 py-4 rounded-xl whitespace-nowrap min-w-[180px]"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Target Value</p><div class="flex items-center gap-2"><span class="text-xl font-bold text-slate-400">?</span><span class="text-lg font-bold text-slate-500">mol <span class="font-chem">${state.targetSubstance.name}</span></span></div></div>
-                                    </div>
-                                </div>
-                                ${state.selectionFeedback !== 'correct' ? `<div class="grid md:grid-cols-2 gap-4 mt-8">${[0, 1].map(idx => `<button onclick="selectBridge(${idx})" class="p-4 bg-white border-2 rounded-xl transition-all active:scale-95 group border-slate-200 hover:border-indigo-500 hover:shadow-md"><p class="text-xs text-slate-400 font-bold uppercase mb-2 group-hover:text-indigo-400">Factor Choice ${idx + 1}</p><div class="flex flex-col items-center"><p class="font-bold text-slate-800">${idx === 0 ? state.cf1Top : state.cf2Top} mol <span class="font-chem">${idx === 0 ? state.substanceA.name : state.substanceB.name}</span></p><div class="w-20 h-px bg-slate-300 my-1.5"></div><p class="font-bold text-slate-800">${idx === 0 ? state.cf1Bottom : state.cf2Bottom} mol <span class="font-chem">${idx === 0 ? state.substanceB.name : state.substanceA.name}</span></p></div></button>`).join('')}</div>` : ''}
-                                ${state.selectionFeedback === 'incorrect' ? `<div class="mt-6 p-4 bg-red-50 border-2 border-red-200 text-red-900 rounded-xl flex items-start gap-3 animate-shake shadow-lg shadow-red-100"><i data-lucide="help-circle" class="mt-1 flex-shrink-0 text-red-600"></i><div><p class="font-bold text-lg mb-0.5 underline decoration-red-300">Unit Mismatch!</p><p>Look closely at your <strong>Given</strong> unit: <span class="font-bold">mol <span class="font-chem">${state.givenSubstance.name}</span></span>. To cancel it out, you must pick the conversion factor that has that same unit in the <strong>denominator</strong> (bottom).</p></div></div>` : ''}
-                                ${state.selectionFeedback === 'correct' ? `<div class="space-y-4 mt-8"><div class="bg-emerald-900 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between"><div><p class="font-bold text-lg mb-1">Calculation Complete!</p><p class="text-emerald-100 text-sm">The units for <span class="font-bold underline">mol <span class="font-chem">${state.givenSubstance.name}</span></span> cancelled out perfectly because one was on top and the other was on the bottom of the calculation.</p></div><div class="bg-emerald-800 p-3 rounded-full"><i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-400"></i></div></div><button onclick="generateNewQuestion()" class="w-full py-4 bg-slate-800 text-white rounded-xl font-bold text-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-2 shadow-md"><i data-lucide="refresh-cw" class="w-5 h-5"></i> Next Problem Set</button></div>` : ''}
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-                <button onclick="resetGame()" class="text-slate-400 hover:text-slate-600 text-sm flex items-center gap-1 mb-12 mx-auto"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Clear Progressive Data</button>
-            `;
-            lucide.createIcons();
+        function updateStatsUI() {
+            document.getElementById('stat-solved').innerText = stats.solved;
+            const acc = stats.attempted === 0 ? 0 : Math.round((stats.solved / stats.attempted) * 100);
+            document.getElementById('stat-accuracy').innerText = `${acc}%`;
         }
 
-        document.addEventListener('mousedown', (e) => {
-            const dropdownContainers = document.querySelectorAll('.relative');
-            let clickedInside = false;
-            dropdownContainers.forEach(container => { if (container.contains(e.target)) clickedInside = true; });
-            if (!clickedInside && state.openDropdown !== null) { state.openDropdown = null; render(); }
-        });
+        window.onload = () => {
+            const list = document.getElementById('atomic-weights-list');
+            list.innerHTML = Object.entries(ATOMIC_WEIGHTS).sort().map(([el, w]) => `<div class="flex justify-between border-b border-slate-50 pb-1 mb-1"><span class="font-bold text-slate-700">${el}</span><span class="text-slate-400 font-mono">${w.toFixed(2)}</span></div>`).join('');
+            
+            // Sync initial bank state
+            const bank = document.getElementById('factor-bank');
+            const btn = document.getElementById('toggle-bank-btn');
+            if (factorBankVisible) {
+                bank.classList.remove('hidden');
+                btn.innerText = "Hide Factor Bank";
+            } else {
+                bank.classList.add('hidden');
+                btn.innerText = "Show Factor Bank";
+            }
 
-        generateNewQuestion();
+            generateProblem();
+            document.getElementById('submit-btn').onclick = checkAnswer;
+            document.getElementById('next-btn').onclick = generateProblem;
+        };
     </script>
 </body>
 </html>
