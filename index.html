@@ -343,7 +343,7 @@
 
         let currentProblem = null;
         let stats = { solved: 0, attempted: 0 };
-        let factorBankVisible = true; // Default to shown
+        let factorBankVisible = true;
         let currentBankFactors = [];
         let calcVal = "0";
         let activeMode = 'random'; 
@@ -533,8 +533,9 @@
             const normalizeUnit = (u) => {
                 if (!u) return "";
                 const s = u.toLowerCase().trim();
-                if (s.startsWith('g')) return 'grams';
-                if (s.startsWith('mol')) return 'moles';
+                // Treat mol, mole, moles all as the same category for logic/cancellation
+                if (s === 'mol' || s === 'mole' || s === 'moles') return 'moles';
+                if (s === 'g' || s === 'gram' || s === 'grams') return 'grams';
                 return s;
             };
 
@@ -550,6 +551,7 @@
                 return {
                     val: parseFloat(match[1]),
                     unit: normalizeUnit(match[2]),
+                    displayUnit: match[2],
                     formula: match[3],
                     originalFormula: match[3]
                 };
@@ -570,7 +572,6 @@
                     return;
                 }
 
-                // 1. CAPITALIZATION CHECK FIRST
                 const topCapError = checkFormulaCapitalization(topObj.originalFormula);
                 if (topCapError) {
                     showSetupFeedback(`Step ${i+1}: Capitalization error. Did you mean "${topCapError}" instead of "${topObj.originalFormula}"?`, "rose");
@@ -582,14 +583,12 @@
                     return;
                 }
 
-                // 2. UNIT CANCELLATION CHECK
+                // Check cancellation using normalized units
                 if (botObj.unit !== currentUnitType || botObj.formula !== currentFormula) {
                     showSetupFeedback(`Step ${i+1}: The bottom part doesn't cancel the previous unit "${currentUnitType} ${currentFormula}".`, "rose");
                     return;
                 }
 
-                // 3. NUMERICAL ACCURACY CHECK
-                // Case A: Molar Mass conversion (grams <-> moles)
                 if (topObj.unit !== botObj.unit) {
                     const formula = topObj.formula;
                     const expectedMM = getMolarMass(formula, p.reaction.components[formula]);
@@ -605,12 +604,10 @@
                         return;
                     }
                 } 
-                // Case B: Mole-to-Mole conversion (moles <-> moles)
                 else if (topObj.unit === 'moles' && botObj.unit === 'moles') {
                     const topFormula = topObj.formula;
                     const botFormula = botObj.formula;
                     
-                    // Find correct coefficients from the reaction array
                     const allComps = [...p.reaction.reactants, ...p.reaction.products];
                     const topData = allComps.find(c => c.f === topFormula);
                     const botData = allComps.find(c => c.f === botFormula);
@@ -716,7 +713,6 @@
             const list = document.getElementById('atomic-weights-list');
             list.innerHTML = Object.entries(ATOMIC_WEIGHTS).sort().map(([el, w]) => `<div class="flex justify-between border-b border-slate-50 pb-1 mb-1"><span class="font-bold text-slate-700">${el}</span><span class="text-slate-400 font-mono">${w.toFixed(2)}</span></div>`).join('');
             
-            // Sync initial bank state
             const bank = document.getElementById('factor-bank');
             const btn = document.getElementById('toggle-bank-btn');
             if (factorBankVisible) {
